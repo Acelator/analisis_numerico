@@ -1,0 +1,86 @@
+// FEM 2D convergencia P1/P2 - FreeFem++
+// Laplace con error y orden 2 (P1) y 3 (P2).
+
+//Problema con dominio cuadrados
+
+// real e = exp(1.0);
+real errorOld = 0;
+real error = 0;
+
+func f      = 2 * pi * pi * sin(pi * x) * sin(pi * y);
+func uex    = sin(pi * x) * sin(pi * y);
+func g      = 0;
+
+for(int i=0; i < 4; i++) {
+    cout << "Iteration: " << i << endl;
+
+    // Automaticamente nos etiqueta los bordes del cuadrado como 1,...,4. El 1 es el que esta sobre el eje X.
+    mesh Th = square(2 ^ (i + 4), 2 ^( i + 4));
+
+    // Pintar mallado
+    if (i==0) {
+        plot(Th, cmm="Iteracion " + i + " | Ejer 1", wait=true);
+    }
+
+    // Para exportar a pdf (que tenia problemas con la ventana grafica y estaba probando unas cosas)
+    // load "plotPDF"
+    // plotPDF("output_mesh.pdf", Th, cmm="High Resolution Vector Text" + i);
+
+    fespace Vh(Th,P1);                              // P1 FE space
+    Vh u,v;
+
+    problem ejer(u,v) =                             //  definion of  the problem 
+        int2d(Th)( (dx(u)*dx(v) + dy(u)*dy(v)))     //  bilinear form
+        - int2d(Th)(f*v)                            //  linear form
+        + on(1,2,3,4,u=g);                          //  boundary condition form
+
+    ejer;
+
+    plot(u, fill=1, value=true, cmm="Iteracion " + i + " | Ejer 1", wait=true);
+
+    error = sqrt(int2d(Th)((uex - u)^2));
+    cout << "Error: " << error << endl;
+
+    if (i > 0) {
+        cout << "Orden estimado del metodo: " << log2(errorOld) - log2(error) << endl;
+    }
+    errorOld = error;
+}
+
+// Vemos efectivamente de forma experimental que el orden es 2.
+
+
+cout << " -------- Caso 2 --------" << endl;
+
+for(int i=0; i < 4; i++) {
+    cout << "Iteration: " << i << endl;
+
+    mesh Th = square(2 ^ (i + 4), 2 ^( i + 4));
+
+    // Pintar mallado
+    if (i==0) {
+        plot(Th, cmm="Iteracion " + i + " | Ejer 2", wait=true);
+    }
+    
+    fespace Vh(Th,P2);                              // P2 FE space
+    Vh u,v;
+
+    problem ejer2(u,v) =                            //  definion of  the problem 
+        int2d(Th)( (dx(u)*dx(v) + dy(u)*dy(v)))     //  bilinear form
+        - int2d(Th)(f*v)                            //  linear form
+        + on(1,2,3,4,u=g);                          //  boundary condition form
+
+    ejer2;
+
+    plot(u, fill=1, value=true, cmm="Iteracion " + i + " | Ejer 2", wait=true);
+
+    error = sqrt(int2d(Th)((uex - u)^2));
+    cout << "Error: " << error << endl;
+
+    if (i > 0) {
+        cout << "Orden estimado del metodo: " << log2(errorOld) - log2(error) << endl;
+    }
+    errorOld = error;
+}
+
+// Vemos efectivamente de forma experimental que el orden es 3.

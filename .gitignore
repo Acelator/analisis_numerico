@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# C++
+*.o
+*.out
+a.out
+calor1d
+calor2d
+
+# FreeFem
+*.msh
+*.gnu
+*.dat
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Data outputs
+*.txt
+*.csv
+!README.md

@@ -1,0 +1,51 @@
+// FEM 2D ondas - FreeFem++
+
+real k = 0.1;
+
+real uint = 30;
+real uext = 18;
+
+real alpha = 0.5;
+
+real dt = 0.02;
+real T = 2;
+real t = 0;
+
+func u0 = ((x - 2.5)^2 + y^2 < 0.25) ?  10 * exp(4 * (1 - 1 / (1 - 4 * ((x - 2.5)^2 + y^2)))) : 0; 
+func g = 1;
+
+//Descripcion de la frontera
+border b1(t=0, 2*pi){x = cos(t); y = -sin(t); label = 0;};
+border b2(t=0, 2*pi){x = 4 * cos(t); y = 4 * sin(t); label = 1;};
+
+mesh Th = buildmesh(b1(30) + b2(350));
+
+plot(Th, wait = true);
+
+fespace Vh(Th,P1);              // P1 FE space.
+Vh u,v;                         // Unkown and test function.
+Vh uold = u0;                   // Solucion instante anterior.
+
+plot(uold, fill=1, value=true, wait=true, cmm="Condicion inicial");
+
+problem ejer(u,v) =
+    int2d(Th)(u * v) + int2d(Th)(dt * k * (dx(u)*dx(v) + dy(u)*dy(v)))
+    + int2d(Th)((-4*y * dx(u) + 4*x * dy(u)) * v * dt)
+    - int2d(Th)(uold * v);
+
+
+int iter = 0; // Contador de iteraciones
+while(t < T - dt/2) {
+    t = t + dt;
+    iter = iter + 1;
+
+    ejer;
+    
+    // Pinta cada 1s, i.e., 10 iteraciones.
+    if (iter % 10 == 0) {
+        cout << "-------- Tiempo = " << t << endl;
+        plot(u, fill=1, value=true, wait=true, cmm="Tiempo t = " + t); 
+    }
+    
+    uold = u;
+}

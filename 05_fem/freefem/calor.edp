@@ -1,0 +1,41 @@
+// FEM 2D calor en L - FreeFem++
+// Dominio en L, condiciones Dirichlet, visualizacion.
+//
+//Ecuacion de un problema con dominio en forma de L
+real l = 0.5;
+real L = 1;
+real h = 0.5;
+real H = 1;
+real uint = 18;
+real uext = 0;
+real mu = 0.1;
+int nn = 20;
+
+func f = x^2 + y^2;
+
+//Descripcion de la frontera
+
+border b1(t=0, L){x = t; y = 0; label = 0;};
+border b2(t=0, h){x = L; y = t; label = 1;};
+border b3(t=L, l){x = t; y = h; label = 0;};
+border b4(t=h, H){x = l; y = t; label = 0;};
+border b5(t=l, 0){x = t; y = H; label = 2;};
+border b6(t=H, 0){x = 0; y = t; label = 0;};
+
+mesh Th = buildmesh(b1(nn*L)+ b2(nn*h) + b3(nn*(L-l)) + b4(nn*(H-h)) + b5(nn*l) + b6(nn*H));
+
+plot(Th, wait = true);
+
+fespace Vh(Th,P1);     // P1 FE space
+Vh u,v;              // unkown and test function. 
+
+
+ problem calor(u,v) =                    //  definion of  the problem 
+    int2d(Th)( mu*(dx(u)*dx(v) + dy(u)*dy(v))) //  bilinear form
+  - int2d(Th)(f*v)                          //  linear form
+  + on(1, u=uint) 
+  + on(2, u=uext);                      // + on(0,u=0)  boundary condition form
+
+
+calor; // solve the problem plot(uh); // to see the result
+plot(u, fill=1,value=true);

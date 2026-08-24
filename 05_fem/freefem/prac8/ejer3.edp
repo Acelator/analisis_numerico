@@ -1,0 +1,101 @@
+// FEM 2D calor y Crank-Nicolson - FreeFem++
+
+real uext = 18;
+
+real alpha = 0.5;
+
+real dt = 0.1;
+real T = 10;
+real t = 0;
+
+func u0 = 30;
+func g = 1;
+func k = (x <= 0) ? 1.0 : 0.1;
+
+//Descripcion de la frontera
+border b(t=0, 2*pi){x = cos(t); y = sin(t); label = 0;};
+
+mesh Th = buildmesh(b(250));
+
+plot(Th, cmm="Seccion a)", wait = true);
+
+// Nos pinta la frontera y la direccion que tomamos sobre esta
+// plot(b(250), wait = true);
+
+fespace Vh(Th,P1);              // P1 FE space.
+Vh u,v;                         // Unkown and test function.
+Vh uold = u0;                   // Solucion instante anterior.
+
+plot(uold, fill=1, value=true, wait=true, cmm="Condicion inicial");
+
+// Seccion i)
+problem ejer(u,v) =
+  int2d(Th)(u*v) + int2d(Th)(dt*k*(dx(u)*dx(v) + dy(u)*dy(v)))
+  + int1d(Th, 0)(dt * alpha * u * v)
+  - int1d(Th, 0)(dt * alpha * uext * v)
+  - int2d(Th)(uold * v);
+
+
+int iter = 0; // Contador de iteraciones
+while(t < T - dt/2) {
+    t = t + dt;
+    iter = iter + 1;
+
+    ejer;
+    
+    // Pinta cada 1s
+    if (iter % 10 == 0) {
+        cout << "-------- Tiempo = " << t << endl;
+        plot(u, fill=1, value=true, wait=true, cmm="Tiempo t = " + t); 
+    }
+    
+    uold = u;
+}
+
+// Seccion ii) ~ Crank-Nicolson
+cout << "-------- Ejer2 --------" << endl;
+
+
+plot(Th, wait = true, cmm="Seccion b)");
+
+// !!! IMPORTANTE
+// Resetear la condicion inicial
+uold = u0;
+plot(uold, fill=1, value=true, wait=true, cmm="Condicion inicial");
+
+
+// !!! Que c++ hace 1/2 como division entera. Se tiene que poner 0.5 o 1./2.
+problem ejer2(u,v) =
+    int2d(Th)(u*v) + int2d(Th)(0.5 * dt * k * (dx(u)*dx(v) + dy(u)*dy(v)))
+    + int1d(Th, 0)(0.5 * dt * alpha * u * v)
+    - int1d(Th, 0)(dt * alpha * uext * v)
+    + int2d(Th)(0.5 * dt * k * (dx(uold)*dx(v) + dy(uold)*dy(v)))
+    + int1d(Th, 0)(0.5 * dt * alpha * uold * v)
+    -  int2d(Th)(uold * v);
+
+
+// Contador de iteracciones
+iter = 0;
+t = 0;
+T = 10;
+
+// Para evitar problemas de aritmetica flotante
+while(t < T -dt/2) {
+    t = t + dt;
+    iter = iter + 1;
+
+    ejer2;
+    
+    // Pinta cada 1s
+    if (iter % 10 == 0) {
+        cout << "-------- Tiempo = " << t << endl;
+        plot(u, fill=1, value=true, wait=true, cmm="Tiempo t = " + t); 
+    }
+    
+    uold = u;
+}
+
+
+
+
+
